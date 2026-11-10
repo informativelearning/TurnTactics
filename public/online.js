@@ -1,35 +1,42 @@
 import{SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY}from './online-config.js';
-const $=id=>document.getElementById(id);let db,room,busy=false,pending=null,timer;
+const $=id=>document.getElementById(id);let db,room,busy=false,pending=null,timer,iconData=null,iconReading=false,iconVersion=0;
 let remembered='';try{remembered=localStorage.getItem('tt-online-room')||'';pending=JSON.parse(sessionStorage.getItem('tt-online-pending')||'null');}catch{}
 function stashPending(value){pending=value;try{if(value)sessionStorage.setItem('tt-online-pending',JSON.stringify(value));else sessionStorage.removeItem('tt-online-pending');}catch{}}
 const setText=(id,value)=>{$(id).textContent=value;};
+const safeIcon=src=>typeof src==='string'&&src.length<=25000&&/^data:image\/png;base64,[A-Za-z0-9+/]+={0,2}$/.test(src);
+function iconImage(src,label){const img=document.createElement('img');img.src=src;img.alt=label;img.className='player-image';img.onerror=()=>{img.hidden=true;};return img;}
 const option=(id,name)=>{const o=document.createElement('option');o.value=id;o.textContent=name;return o;};
 function message(text){setText('feedback',text);}
 function render(s){room=s;$('testNotice').hidden=!s.isTest;$('fillTest').hidden=!s.isHost||s.phase!=='lobby'||s.players.length>=5;setText('roomCode',s.code);$('room').hidden=false;$('entry').hidden=true;
  setText('roomStatus',`${s.isHost?'HOST / REFEREE':'PLAYER'} · ${s.phase.toUpperCase()} · DAY ${s.day}${s.closed?' · ACTIONS CLOSED':''}`);
  const me=s.players.find(p=>p.id===s.me),alive=s.players.filter(p=>p.alive);
- $('roster').replaceChildren(...s.players.map(p=>{const li=document.createElement('li');li.textContent=`${String(p.id+1).padStart(2,'0')} · ${p.name}${p.alive?'':' · eliminated'}${p.hearts!==undefined&&s.phase!=='lobby'?` · ${p.hearts} hearts / ${p.points} points / range ${p.range}${p.shield?' / shielded':''}`:''}`;return li;}));
+ $('roster').replaceChildren(...s.players.map(p=>{const li=document.createElement('li');if(safeIcon(p.icon))li.append(iconImage(p.icon,p.name+' icon'));const text=document.createElement('span');text.textContent=`${String(p.id+1).padStart(2,'0')} · ${p.name}${p.alive?'':' · eliminated'}${p.hearts!==undefined&&s.phase!=='lobby'?` · ${p.hearts} hearts / ${p.points} points / range ${p.range}${p.shield?' / shielded':''}`:''}`;li.append(text);return li;}));
  $('startControls').hidden=!s.isHost||s.phase!=='lobby';$('play').hidden=s.phase==='lobby';$('hostControls').hidden=!s.isHost||s.phase!=='active';$('playerControls').hidden=s.isHost||!me?.alive||s.phase!=='active';$('voteControls').hidden=s.isHost||!me||me.alive||s.phase!=='active';
  setText('roleTitle',s.isHost?'Host desk':'Your next play');setText('myStats',me?`${me.hearts} hearts · ${me.points} points · Range ${me.range}${me.shield?' · Shield active':''}`:'Referee view · all resources visible');
+ 
+ $('iconPanel').hidden=s.isHost||!me;
+ const locked=!!me?.icon||s.phase!=='lobby';$('iconPicker').hidden=locked;
+ setText('iconStatus',me?.icon?'Your icon is locked for this game. Everyone in the room can see it.':s.phase!=='lobby'?'This game has started. You can choose an image in your next game.':'Choose an image before the host starts. Confirming locks it for this game; everyone in the room can see it.');
+ if(me?.icon){iconData=null;$('iconPreviewBox').hidden=true;setText('iconFeedback','');}
  for(const id of ['target','voteTarget']){const old=$(id).value;$(id).replaceChildren(...alive.filter(p=>p.id!==s.me).map(p=>option(p.id,p.name)));if([...$(id).options].some(o=>o.value===old))$(id).value=old;}
  if(s.phase!=='lobby'){
  $('onlineBoard').style.setProperty('--size',s.size);$('onlineBoard').replaceChildren();
  for(let y=0;y<s.size;y++)for(let x=0;x<s.size;x++){
  const p=alive.find(p=>p.x===x&&p.y===y),b=document.createElement('button');b.className='tile';b.disabled=true;b.setAttribute('aria-label',`Column ${x+1}, row ${y+1}${p?', '+p.name:''}`);
  if(me?.alive&&Math.abs(me.x-x)+Math.abs(me.y-y)<=me.range)b.classList.add('inrange');
- if(p){b.textContent=String(p.id+1).padStart(2,'0');b.classList.add('occupied');b.style.opacity='1';if(p.id===s.me)b.classList.add('selected');if(p.shield)b.classList.add('shielded');}$('onlineBoard').append(b);
+ if(p){b.textContent=String(p.id+1).padStart(2,'0');b.classList.add('occupied');b.style.opacity='1';if(safeIcon(p.icon)){b.textContent='';b.append(iconImage(p.icon,p.name+' icon'));const num=document.createElement('span');num.className='token-number';num.textContent=String(p.id+1).padStart(2,'0');b.append(num);}if(p.id===s.me)b.classList.add('selected');if(p.shield)b.classList.add('shielded');}$('onlineBoard').append(b);
  }
  }
  const list=(id,items)=>$(id).replaceChildren(...items.slice(0,100).map(text=>{const li=document.createElement('li');li.textContent=text;return li;}));list('events',s.events);$('audit').hidden=!s.isHost;list('hostLog',s.hostLog);
  if(s.phase==='ended')message(`Game over. ${s.players.find(p=>p.id===s.winner)?.name||'Last survivor'} wins.`);
  updateButtons();
 }
-function updateButtons(){document.querySelectorAll('button').forEach(b=>{if(b.id!=='connect'&&b.id!=='retry')b.disabled=busy||!!pending;});if(room){$('start').disabled=busy||!!pending||room.players.length<5;$('fillTest').disabled=busy||!!pending||!room.isHost||room.phase!=='lobby'||room.players.length<1||room.players.length>=5;document.querySelectorAll('[data-action],[data-move],#remove').forEach(b=>b.disabled=busy||!!pending||room.closed||room.phase!=='active');}}
+function updateButtons(){document.querySelectorAll('button').forEach(b=>{if(b.id!=='connect'&&b.id!=='retry')b.disabled=busy||!!pending;});$('saveIcon').disabled=busy||!!pending||iconReading||!iconData;$('iconFile').disabled=busy||!!pending||iconReading;if(room){$('start').disabled=busy||!!pending||room.players.length<5;$('fillTest').disabled=busy||!!pending||!room.isHost||room.phase!=='lobby'||room.players.length<1||room.players.length>=5;document.querySelectorAll('[data-action],[data-move],#remove').forEach(b=>b.disabled=busy||!!pending||room.closed||room.phase!=='active');}}
 async function rpc(name,args){const{data,error}=await db.rpc(name,args);if(error)throw error;return data;}
 async function refresh(){if(!room||busy||pending)return;try{render(await rpc('tt_view',{p_code:room.code}));setText('sync','Synced '+new Date().toLocaleTimeString());}catch{setText('sync','Connection lost. Display may be stale; actions still require server confirmation.');}}
-async function send(name,args){if(busy)return;if(name==='tt_command')stashPending({name,args});busy=true;updateButtons();message('Waiting for server confirmation…');try{const s=await rpc(name,args);stashPending(null);$('retry').hidden=true;render(s);try{localStorage.setItem('tt-online-room',s.code);}catch{}message('Server confirmed.');setText('sync','Synced '+new Date().toLocaleTimeString());if(!timer)timer=setInterval(refresh,4000);}catch(e){
+async function send(name,args){if(busy)return;if(name==='tt_command'||name==='tt_set_icon')stashPending({name,args});busy=true;updateButtons();message('Waiting for server confirmation…');try{const s=await rpc(name,args);stashPending(null);$('retry').hidden=true;render(s);try{localStorage.setItem('tt-online-room',s.code);}catch{}message('Server confirmed.');setText('sync','Synced '+new Date().toLocaleTimeString());if(!timer)timer=setInterval(refresh,4000);}catch(e){
  // Postgres errors have a code. Transport errors may have no code: retain action UUID for safe retry.
- if(name==='tt_command'&&!e.code){stashPending({name,args});$('retry').hidden=false;message('Confirmation unavailable. Do not repeat the action. Use “Retry the same request” to safely check or complete it.');}
+ if((name==='tt_command'||name==='tt_set_icon')&&!e.code){stashPending({name,args});$('retry').hidden=false;message('Confirmation unavailable. Do not repeat the action. Use “Retry the same request” to safely check or complete it.');}
  else{stashPending(null);$('retry').hidden=true;message(e.message||'Request failed.');}
  }finally{busy=false;updateButtons();}}
 const command=(action,extra={})=>{if(!pending&&!busy&&room)send('tt_command',{p_code:room.code,p_request:crypto.randomUUID(),p_action:action,...extra});};
@@ -41,3 +48,19 @@ $('create').onclick=()=>send('tt_create',{});$('join').onclick=()=>send('tt_join
 document.querySelectorAll('[data-action]').forEach(b=>b.onclick=()=>command(b.dataset.action,{p_target:Number($('target').value)}));document.querySelectorAll('[data-move]').forEach(b=>b.onclick=()=>command('move',{p_direction:b.dataset.move}));
 $('remove').onclick=()=>{if(confirm('Withdraw permanently? You will still be able to vote.'))command('remove');};$('close').onclick=()=>command('close');$('next').onclick=()=>{if(confirm('Advance one day, award points and expire shields?'))command('next_day');};$('vote').onclick=()=>command('vote',{p_target:Number($('voteTarget').value)});$('retry').onclick=()=>{if(pending)send(pending.name,pending.args);};
 if(!SUPABASE_URL||!SUPABASE_PUBLISHABLE_KEY){setText('connectionStatus','Online play needs a Supabase project. Follow ONLINE_SETUP.md, then fill in online-config.js.');$('connect').disabled=true;}else setText('connectionStatus','Ready. Connect to create or join a room.');
+
+$('iconFile').onchange=async()=>{
+ const file=$('iconFile').files[0],version=++iconVersion;iconData=null;$('iconPreviewBox').hidden=true;setText('iconFeedback','');if(!file){updateButtons();return;}
+ if(!['image/png','image/jpeg'].includes(file.type)||file.size>5*1024*1024){setText('iconFeedback','Choose a PNG or JPG no larger than 5 MB.');updateButtons();return;}
+ iconReading=true;updateButtons();let bitmap;
+ try{
+ bitmap=await createImageBitmap(file);
+ if(bitmap.width*bitmap.height>24000000)throw Error('Choose a smaller image (under 24 megapixels).');
+ const canvas=document.createElement('canvas');canvas.width=64;canvas.height=64;const ctx=canvas.getContext('2d');if(!ctx)throw Error('Image conversion is not supported in this browser.');
+ const scale=Math.min(64/bitmap.width,64/bitmap.height),w=Math.max(1,Math.round(bitmap.width*scale)),h=Math.max(1,Math.round(bitmap.height*scale));ctx.drawImage(bitmap,(64-w)/2,(64-h)/2,w,h);
+ const data=canvas.toDataURL('image/png');if(!safeIcon(data))throw Error('Image could not be reduced enough. Try a simpler image.');
+ if(version!==iconVersion)return;iconData=data;$('iconPreview').src=data;$('iconPreviewBox').hidden=false;setText('iconFeedback','Preview only. Confirm below to save this icon once.');
+ }catch(e){setText('iconFeedback',e.message||'This image could not be read. Try another PNG or JPG.');}
+ finally{if(bitmap)bitmap.close();iconReading=false;updateButtons();}
+};
+$('saveIcon').onclick=()=>{if(iconData&&!busy&&!pending&&room?.phase==='lobby'&&confirm('Lock this image as your icon for this game? You cannot change it afterward.'))send('tt_set_icon',{p_code:room.code,p_icon:iconData});};
