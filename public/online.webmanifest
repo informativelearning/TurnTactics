@@ -1,24 +1,22 @@
 {
-  "id": "./",
-  "name": "Turn Tactics",
+  "id": "./online.html",
+  "name": "Turn Tactics Online",
   "short_name": "Turn Tactics",
-  "start_url": "./",
+  "start_url": "./online.html",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#f9f8f7",
   "theme_color": "#2783de",
+  "background_color": "#f9f8f7",
   "icons": [
     {
       "src": "./icons/icon-192.png",
       "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any"
+      "type": "image/png"
     },
     {
       "src": "./icons/icon-512.png",
       "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any"
+      "type": "image/png"
     }
   ]
 }
