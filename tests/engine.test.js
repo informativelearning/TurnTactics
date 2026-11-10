@@ -1,0 +1,15 @@
+import test from 'node:test';import assert from 'node:assert/strict';import{createGame,act,nextDay,vote}from '../public/engine.js';
+const fresh=()=>{const s=createGame(['A','B','C','D','E']);s.players.forEach((p,i)=>{p.x=i%4;p.y=Math.floor(i/4);});return s;};
+test('unique spawns, initial resources',()=>{const s=createGame(['A','B','C','D','E']);assert.equal(new Set(s.players.map(p=>`${p.x},${p.y}`)).size,5);assert.ok(s.players.every(p=>p.hearts===3&&p.points===1));});
+test('minimum players',()=>assert.throws(()=>createGame(['A'])));
+test('attack spends one and does not mutate input',()=>{const s=fresh(),r=act(s,0,'attack',1);assert.equal(r.players[1].hearts,2);assert.equal(r.players[0].points,0);assert.equal(s.players[1].hearts,3);});
+test('gift transfers exactly one',()=>{const r=act(fresh(),0,'give',1);assert.equal(r.players[0].points,0);assert.equal(r.players[1].points,2);});
+test('range, occupancy and edge validation',()=>{assert.throws(()=>act(fresh(),0,'attack',3));assert.throws(()=>act(fresh(),0,'move','right'));assert.throws(()=>act(fresh(),0,'move','left'));});
+test('movement spends one',()=>{const r=act(fresh(),4,'move','down');assert.equal(r.players[4].y,2);assert.equal(r.players[4].points,0);});
+test('shields expire and income accumulates',()=>{const s=fresh();s.players[1].points=3;const r=act(s,1,'shield');assert.throws(()=>act(r,0,'attack',1));const n=nextDay(r);assert.equal(n.players[1].shield,false);assert.equal(n.players[1].points,2);});
+test('range upgrade persists',()=>{const s=fresh();s.players[0].points=2;assert.equal(nextDay(act(s,0,'range')).players[0].range,3);});
+test('third hit eliminates',()=>{let s=fresh();s.players[0].points=3;for(let i=0;i<3;i++)s=act(s,0,'attack',1);assert.equal(s.players[1].alive,false);assert.throws(()=>act(s,1,'move','down'));});
+test('majority vote and reset, no eliminated income',()=>{let s=act(fresh(),4,'remove');s=vote(s,4,1);s=nextDay(s);assert.equal(s.players[1].points,3);assert.equal(s.players[4].points,1);assert.deepEqual(s.votes,{});});
+test('vote tie gives no bonus',()=>{let s=fresh();s.players[3].alive=false;s.players[4].alive=false;s=vote(vote(s,3,0),4,1);assert.equal(nextDay(s).players[0].points,2);});
+test('closed action window and funds',()=>{let s=fresh();s.closed=true;assert.throws(()=>act(s,0,'attack',1));assert.throws(()=>act(fresh(),0,'shield'));});
+test('last survivor ends game',()=>{let s=fresh();s.players.slice(2).forEach(p=>p.alive=false);s=act(s,1,'remove');assert.equal(s.winner,0);assert.throws(()=>nextDay(s));assert.throws(()=>act(s,0,'remove'));});
