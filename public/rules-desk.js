@@ -9,7 +9,7 @@ export function createRulesDesk({ getRoom, rpc, send, isLocked }) {
 
   function describe(e) {
     const when = e.when === 'next_reset' ? ' · at the next midnight reset' : ' · immediately';
-    if (e.type === 'set') { const c = catalogEntry(e.key); return `${c?.label || e.key} → ${typeof e.value === 'boolean' ? (e.value ? 'enabled' : 'disabled') : (e.value === 0 && c?.zero ? c.zero : e.value)}${when}`; }
+    if (e.type === 'set') { const c = catalogEntry(e.key); return `${c?.label || e.key} set to ${typeof e.value === 'boolean' ? (e.value ? 'enabled' : 'disabled') : (e.value === 0 && c?.zero ? c.zero : e.value)}${when}`; }
     if (e.type === 'adjust') { const who = e.target === 'living' ? 'Every living player' : getRoom()?.players.find((p) => p.id === e.target)?.name || 'Player';
       return `${who}: ${e.amount > 0 ? '+' : '−'}${Math.abs(e.amount)} ${e.resource}${when}`; }
     if (e.type === 'expire_shields') return 'End all active shields' + when;
@@ -28,7 +28,7 @@ export function createRulesDesk({ getRoom, rpc, send, isLocked }) {
       const bool = c.type === 'bool';
       $('effectValue').hidden = bool; $('effectToggle').hidden = !bool;
       if (!bool) { $('effectValue').min = c.min; $('effectValue').max = c.max; }
-      text('effectKeyNote', `Now: ${bool ? (current ? 'enabled' : 'disabled') : (current === 0 && c.zero ? c.zero : current)}${bool ? '' : ` · allowed ${c.min}–${c.max}${c.zero ? ` (0 = ${c.zero})` : ''}`}. ${c.note || ''}`);
+      text('effectKeyNote', `Now: ${bool ? (current ? 'enabled' : 'disabled') : (current === 0 && c.zero ? c.zero : current)}${bool ? '' : ` · allowed ${c.min} to ${c.max}${c.zero ? ` (0 = ${c.zero})` : ''}`}. ${c.note || ''}`);
     }
     if (type === 'adjust') {
       const select = $('adjustTarget'), chosen = select.value;
@@ -51,7 +51,7 @@ export function createRulesDesk({ getRoom, rpc, send, isLocked }) {
     if (desk.proposal) {
       const cancel = node('button', 'Stop reviewing this proposal', 'text-button'); cancel.type = 'button'; cancel.onclick = reset;
       $('deskProposal').replaceChildren(node('strong', `Approving a proposal by ${desk.proposal.authorName}`),
-        node('p', `“${desk.proposal.title}” — ${desk.proposal.body}`), node('p', `${desk.proposal.authorName} pays ${s.config.costProposal} points only if this is published. Payment and effects happen together or not at all.`, 'hint'), cancel);
+        node('p', `“${desk.proposal.title}”: ${desk.proposal.body}`), node('p', `${desk.proposal.authorName} pays ${s.config.costProposal} points only if this is published. Payment and effects happen together or not at all.`, 'hint'), cancel);
     }
     $('deskCorrection').hidden = !desk.corrects;
     if (desk.corrects) $('deskCorrection').replaceChildren(node('strong', 'Drafting a correction'), ...desk.caveats.map((c) => node('p', c, 'hint')));
@@ -63,7 +63,7 @@ export function createRulesDesk({ getRoom, rpc, send, isLocked }) {
       box.replaceChildren(node('h3', p.ok ? 'This amendment will:' : 'This amendment cannot be published'), list);
       p.errors.forEach((e) => box.append(node('p', 'Problem: ' + e, 'error')));
       if (p.ok) {
-        box.append(node('p', 'Affects: ' + p.affects), node('p', p.changesExisting ? 'Changes existing state: yes — resources, ranges or active shields change as listed.' : 'Changes existing state: no — only future behaviour changes.'));
+        box.append(node('p', 'Affects: ' + p.affects), node('p', p.changesExisting ? 'Changes existing state: yes. Resources, ranges or active shields change as listed.' : 'Changes existing state: no. Only future behaviour changes.'));
         if (p.eliminates > 0) box.append(node('p', `Referee only: this eliminates ${p.eliminates} player${p.eliminates === 1 ? '' : 's'} right now.`, 'error'));
         if (p.endsMatchNow) box.append(node('p', 'This ENDS THE MATCH immediately and records the surviving winners.', 'error'));
         if (desk.proposal) box.append(node('p', `Proposer is charged ${p.proposalCost} points on publication.`));
@@ -117,7 +117,7 @@ export function createRulesDesk({ getRoom, rpc, send, isLocked }) {
     if (!p || desk.previewKey !== key() || !p.ok) return;
     const { confirmed } = await confirmDialog({ title: `Publish “${title}”?`,
       body: p.lines.map((l) => (l.when === 'now' ? '' : 'From the next midnight reset: ') + l.text).join(' '),
-      cost: (p.endsMatchNow ? 'THIS ENDS THE MATCH NOW. ' : '') + (desk.proposal ? `${desk.proposal.authorName} is charged ${p.proposalCost} points. ` : '') + 'Everyone in the room will see this amendment and your reason. It cannot be erased, only corrected by a later amendment.',
+      cost: (p.endsMatchNow ? 'THIS ENDS THE MATCH NOW. ' : '') + (desk.proposal ? `${desk.proposal.authorName} is charged ${p.proposalCost} points. ` : '') + 'Everyone in the room will see this amendment and your reason. It cannot be erased; a later amendment can correct it.',
       label: 'Publish', danger: p.endsMatchNow || p.eliminates > 0 });
     if (!confirmed) return;
     const ok = await send('tt_amend', { p_code: getRoom().code, p_request: crypto.randomUUID(), p_title: title, p_reason: reason, p_effects: desk.effects, p_proposal: desk.proposal?.id || null, p_corrects: desk.corrects });

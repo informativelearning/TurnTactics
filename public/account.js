@@ -145,7 +145,7 @@ export function createAccount({ db, rpc, onChange, getRememberedRoom }) {
 
   $('registerForm').onsubmit = (e) => { e.preventDefault(); guarded(async () => {
     const typed = $('regEmail').value.trim().toLowerCase(), username = $('regUsername').value.trim().toLowerCase(), display = $('regDisplay').value.trim(), password = $('regPassword').value;
-    if (!USERNAME.test(username)) throw Error('Usernames use 3–20 letters, numbers or underscores.');
+    if (!USERNAME.test(username)) throw Error('Usernames use 3 to 20 letters, numbers or underscores.');
     if (reserved(username) || reserved(display)) throw Error('That name is reserved. Choose another.');
     if (password.length < 8) throw Error('Use a password of at least 8 characters.');
     const email = typed || username + NO_EMAIL;
@@ -158,7 +158,7 @@ export function createAccount({ db, rpc, onChange, getRememberedRoom }) {
       $('regPassword').value = '';
       await refresh();
       if (account.status === 'guest') { say(typed ? 'Check your email and open the confirmation link on this device. Then return here to set your password and finish the account. Your seats stay with this browser meanwhile.' : NEEDS_EMAIL); return; }
-      if (passwordError) { say('Nearly there: choose a password below to finish. ' + passwordError.message); return; }
+      if (passwordError) { say('Choose a password below to finish. ' + passwordError.message); return; }
       // No confirmation step on this server, so finish the profile now instead of asking for the same details again.
       await saveProfile(username, display); await refresh();
       say('Account created. Your existing seats came with you.');
@@ -169,7 +169,7 @@ export function createAccount({ db, rpc, onChange, getRememberedRoom }) {
     $('regPassword').value = '';
     if (!data?.session) {
       if (!typed) throw Error(NEEDS_EMAIL);
-      showTab(false); say('Almost there: open the confirmation link we emailed you, then sign in. If the address already has an account, sign in or reset its password instead.');
+      showTab(false); say('Open the confirmation link we emailed you, then sign in. If the address already has an account, sign in or reset its password instead.');
       return;
     }
     try { await saveProfile(username, display); say(''); } catch (err) {
@@ -195,7 +195,7 @@ export function createAccount({ db, rpc, onChange, getRememberedRoom }) {
 
   $('profileForm').onsubmit = (e) => { e.preventDefault(); guarded(async () => {
     const username = $('profileUsername').value.trim().toLowerCase();
-    if (!USERNAME.test(username)) throw Error('Usernames use 3–20 letters, numbers or underscores.');
+    if (!USERNAME.test(username)) throw Error('Usernames use 3 to 20 letters, numbers or underscores.');
     if (!$('profilePasswordWrap').hidden) {
       const { error } = await db.auth.updateUser({ password: $('profilePassword').value, data: { needs_password: false } });
       if (error) throw Error(error.message);

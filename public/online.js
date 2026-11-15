@@ -61,7 +61,7 @@ async function send(name, args) {
     notice(message, target); return true;
   } catch (e) {
     // No error code means no answer arrived: keep the request so the SAME one can be retried safely.
-    if (RETRYABLE.has(name) && !e.code) { stash({ name, args }); notice('No confirmation arrived. Do not repeat the action — retry this same request instead.', target); }
+    if (RETRYABLE.has(name) && !e.code) { stash({ name, args }); notice('No confirmation arrived. Retry this same request; repeating the action could apply it twice.', target); }
     else { stash(null); notice(e.message || 'The server could not complete this request.', target); }
     return false;
   } finally { state.busy = false; updateControls(); }
@@ -341,7 +341,7 @@ function renderPlayers() {
   }));
 }
 function rulesRows(s) {
-  const c = config(s), off = (k) => (c[k] === false ? ' — currently disabled' : '');
+  const c = config(s), off = (k) => (c[k] === false ? ' · currently disabled' : '');
   return [
     ['Move', `${pts(c.costMove)} · one orthogonal square, never diagonal or onto an occupied square${c.moveLimit > 0 ? ` · at most ${plural(c.moveLimit, 'move')} a day` : ''}${off('allowMove')}`],
     ['Attack', `${pts(c.costAttack)} on a hit · removes one heart · a shielded target rejects it for free${off('allowAttack')}`],
@@ -498,7 +498,7 @@ $('start').onclick = async () => { const s = state.room, legacy = !$('legacySize
   if (confirmed) command('start', legacy ? { p_size: Number($('boardSize').value) } : {}); };
 $('fillTest').onclick = async () => { const { confirmed } = await confirmDialog({ title: 'Turn this into a test room?', body: 'Adds stationary placeholders up to five seats. The room is labelled a test permanently and uses manual day controls.', cost: 'Not a real competitive match.', label: 'Add test seats' }); if (confirmed) send('tt_fill_test_seats', { p_code: state.room.code }); };
 $('closeDay').onclick = async () => { const { confirmed } = await confirmDialog({ title: 'Close actions for this test day?', body: 'Votes can still be cast.', label: 'Close actions' }); if (confirmed) command('close'); };
-$('nextDay').onclick = async () => { const { confirmed } = await confirmDialog({ title: 'Advance the test day?', body: 'Settles votes, ends expired shields, applies scheduled amendments and awards income — exactly as a midnight reset would.', label: 'Advance day' }); if (confirmed) command('next_day'); };
+$('nextDay').onclick = async () => { const { confirmed } = await confirmDialog({ title: 'Advance the test day?', body: 'Settles votes, ends expired shields, applies scheduled amendments and awards income, exactly as a midnight reset would.', label: 'Advance day' }); if (confirmed) command('next_day'); };
 $('withdraw').onclick = async () => { const { confirmed } = await confirmDialog({ title: 'Withdraw from this game?', body: 'You are eliminated permanently and lose your remaining points. There is no undo or revival. You keep chat and your vote.', cost: 'Free. This is not signing out.', label: 'Withdraw permanently', danger: true }); if (confirmed) command('remove'); };
 $('migrate').onclick = async () => { const r = await confirmDialog({ title: 'Migrate this room’s rules version?', body: $('migrateText').textContent, cost: 'Announced publicly in Dispatch. This cannot be reversed.', label: 'Migrate', danger: true, input: { label: 'Type MIGRATE to confirm', max: 10 } });
   if (r.confirmed) send('tt_migrate_rules', { p_code: state.room.code, p_request: crypto.randomUUID(), p_version: CURRENT_RULES, p_confirm: r.input }); };
@@ -532,7 +532,7 @@ $('iconFile').onchange = async () => {
 $('saveIcon').onclick = async () => { if (!state.icon) return; const { confirmed } = await confirmDialog({ title: 'Use this image as your token?', body: 'Everyone in the room sees it. Once confirmed it cannot be changed during this game.', cost: 'Replaces your crest for this game.', label: 'Lock my image' }); if (confirmed) send('tt_set_icon', { p_code: state.room.code, p_icon: state.icon }); };
 $('makeRecovery').onclick = async () => { const { confirmed } = await confirmDialog({ title: 'Create a private recovery code?', body: 'Anyone holding this code and the room code can take over this role. Creating one invalidates any earlier code for the role.', cost: 'Shown once on this screen. Store it in a password manager.', label: 'Create code' });
   if (confirmed) send('tt_save_recovery', { p_code: state.room.code, p_token: Array.from(crypto.getRandomValues(new Uint8Array(32)), (b) => b.toString(16).padStart(2, '0')).join('') }); };
-$('copyRecovery').onclick = async () => { if (!$('privateRecovery').value) return; const ok = await copyText(`Turn Tactics — PRIVATE RECOVERY\nRoom: ${state.room.code}\nCode: ${$('privateRecovery').value}`); text('recoveryFeedback', ok ? 'Copied. Paste it somewhere private, then hide it here.' : `Clipboard unavailable. Select the code and copy it by hand, with room code ${state.room.code}.`); if (!ok) { $('privateRecovery').focus(); $('privateRecovery').select(); } };
+$('copyRecovery').onclick = async () => { if (!$('privateRecovery').value) return; const ok = await copyText(`Turn Tactics: PRIVATE RECOVERY\nRoom: ${state.room.code}\nCode: ${$('privateRecovery').value}`); text('recoveryFeedback', ok ? 'Copied. Paste it somewhere private, then hide it here.' : `Clipboard unavailable. Select the code and copy it by hand, with room code ${state.room.code}.`); if (!ok) { $('privateRecovery').focus(); $('privateRecovery').select(); } };
 $('hideRecovery').onclick = () => { $('privateRecovery').value = ''; $('recoveryOutput').hidden = true; text('recoveryFeedback', 'Hidden. If you did not save it, create a replacement.'); };
 
 // Appearance: a small fixed set of choices, remembered on this device.

@@ -47,7 +47,7 @@
     <div class="home-story">
       <p class="eyebrow">A social strategy game for friends</p>
       <h1>Every point<br>is a promise.</h1>
-      <p class="lead">Move carefully. Choose your allies. Decide what your word is worth.</p>
+      <p class="lead">Move carefully and choose your allies. Then decide what your word is worth.</p>
     </div>
     <div class="card" id="homeCard">
       <p id="homeFeedback" class="feedback" role="status" aria-live="polite"></p>
@@ -71,7 +71,7 @@
         </form>
         <form id="registerForm" role="tabpanel" aria-labelledby="tabRegister" hidden>
           <p id="guestUpgradeNote" class="notice" hidden>This browser holds a guest identity from an earlier version. Creating the account here keeps its seats, images, proposals and messages.</p>
-          <label for="regUsername">Username <span class="hint">· 3–20 letters, numbers, underscores · you sign in with it</span></label>
+          <label for="regUsername">Username <span class="hint">· 3 to 20 letters, numbers or underscores · you sign in with it</span></label>
           <input id="regUsername" required autocomplete="username" autocapitalize="none" spellcheck="false" pattern="[A-Za-z0-9_]{3,20}" maxlength="20">
           <label for="regDisplay">Display name <span class="hint">· what rooms call you by default</span></label>
           <input id="regDisplay" required autocomplete="nickname" maxlength="24">
@@ -175,7 +175,7 @@
         </div>
         <div id="boardViewport" class="board-viewport"><div id="board" class="board" role="group" aria-label="Game board. Arrow keys move between squares."></div></div>
         <details class="legend"><summary>Board key</summary>
-          <p><span class="key key-self"></span> Your token is ringed and tagged “you”. <span class="key key-range"></span> A corner dot marks squares within your targeting range. <span class="key key-move"></span> A dashed border marks squares you can move to. <span class="key key-chosen"></span> A double outline marks your selection. An absent shield marker never proves another player is unshielded.</p>
+          <p><span class="key key-self"></span> Your token is ringed and tagged “you”. <span class="key key-range"></span> A corner dot marks squares within your targeting range. <span class="key key-move"></span> A dashed border marks squares you can move to. <span class="key key-chosen"></span> A double outline marks your selection. Other players’ shields are private, so a missing marker tells you nothing.</p>
         </details>
       </div>
       <aside class="inspector" aria-label="Selection and actions">
@@ -213,7 +213,7 @@
       </form>
       <div class="chat-delivery"><p id="chatFeedback" class="feedback" role="status" aria-live="polite"></p><button id="chatRetry" hidden>Retry the same message</button><button id="chatReconnect" class="text-button" hidden>Reconnect chat</button></div>
       <details class="chat-details"><summary>Chat privacy, limits and retention</summary>
-        <p class="hint">Direct messages are visible only to their two participants inside the app. They are <strong>not end-to-end encrypted</strong>: database administrators can access stored messages. The host cannot read other people’s direct messages and cannot mute anyone. Chat is not the official record — only Dispatch confirms that an action happened. Text only; 1000 characters; one message per second and 20 per minute. Messages cannot be edited or withdrawn. When a game finishes, its chat is deleted 24 hours later (sooner if the host deletes the finished room). Anything already seen, screenshotted or copied elsewhere cannot be erased.</p>
+        <p class="hint">Direct messages are visible only to the two people in them, inside the app. They are <strong>not end-to-end encrypted</strong>, so database administrators can access stored messages. The host cannot read other people’s direct messages or mute anyone. Chat is not the official record; only Dispatch confirms that an action happened. Messages are text only, up to 1000 characters, with a limit of one per second and 20 per minute, and they cannot be edited or withdrawn. A finished game’s chat is deleted 24 hours later, or sooner if the host deletes the finished room. Anything already seen, screenshotted or copied elsewhere cannot be erased.</p>
       </details>
     </div>
   </div>
@@ -226,8 +226,8 @@
     <article class="card"><h2>Rules in force</h2><dl id="rulesSummary" class="rules"></dl>
       <details><summary>How the game works</summary><div class="prose">
         <p>The host is a referee, not a player. Every player starts with three hearts on a unique random square. The field opens at the next Pacific midnight; each living player then receives income at every midnight. Unspent points accumulate.</p>
-        <p>Range is Manhattan distance (squares across plus squares up or down), so diagonal and L-shaped targets count when they are within range. Range is for attacks and transfers, not for movement.</p>
-        <p>Confirming an action is your declaration. Only a server-accepted action changes the game; a rejected or interrupted request costs nothing. Attacks, transfers, shields and other players’ resources are private. Movement, eliminations and rule changes are public in Dispatch.</p>
+        <p>Range is Manhattan distance (squares across plus squares up or down), so diagonal and L-shaped targets count when they are within range. Range applies to attacks and transfers. Movement is always one square.</p>
+        <p>You declare an action by confirming it, and only an action the server accepts changes the game. A rejected or interrupted request costs nothing. Attacks, transfers, shields and other players’ resources are private. Movement, eliminations and rule changes are public in Dispatch.</p>
         <p>Eliminated players keep chat and may vote for a living player; a strict majority of ballots cast awards a bonus at midnight. Ballots are private.</p>
         <p>The referee sees every resource and a private action log, and must not reveal them.</p>
       </div></details>
@@ -284,8 +284,8 @@
       <button id="notifyEnable" class="primary" hidden>Turn on notifications on this device</button>
       <button id="notifyDisable" hidden>Turn off on this device</button>
       <fieldset id="notifyPrefs" hidden><legend>Notify me about</legend><div id="notifyList"></div></fieldset>
-      <p class="hint">Alerts show only “You have a new update” — never a message, a sender or your resources. Quiet hours run 10 pm – 8 am Pacific for every category; anything that happens then arrives as one summary afterwards. Delivery time depends on your device and is not guaranteed.</p>
-      <details><summary>iPhone and iPad</summary><p class="hint">Apple only delivers web notifications to apps added to the Home Screen (iOS/iPadOS 16.4 or later). In Safari choose Share → Add to Home Screen, open Turn Tactics from that icon, then turn notifications on here.</p></details>
+      <p class="hint">Alerts only ever say “You have a new update”. They never show a message, a sender or your resources. Quiet hours run from 10 pm to 8 am Pacific for every category, and anything that happens then arrives as one summary afterwards. Delivery time depends on your device and is not guaranteed.</p>
+      <details><summary>iPhone and iPad</summary><p class="hint">Apple only delivers web notifications to apps added to the Home Screen (iOS/iPadOS 16.4 or later). In Safari, tap Share, then Add to Home Screen. Open Turn Tactics from that icon, then turn notifications on here.</p></details>
       <p id="notifyFeedback" class="feedback" role="status" aria-live="polite"></p>
     </article>
     <article class="card" id="iconCard" hidden><h2>Your token</h2><div id="tokenPreview" class="token-preview"></div><p id="iconStatus"></p>
@@ -302,13 +302,13 @@
     </article>
     <article class="card" id="withdrawCard" hidden><h2>Withdraw</h2><p>Withdrawing eliminates you permanently. There is no undo. You keep chat and your vote.</p>
       <button id="withdraw" class="danger">Withdraw from this game</button><p id="withdrawReason" class="hint"></p></article>
-    <article class="card"><h2>About this app</h2><p class="hint">Invite-only: rooms are reachable only with their code. No public matchmaking, no analytics. Turn Tactics needs a connection — an installed copy opens offline but cannot show live state or send actions. <span id="appVersion"></span></p></article>
+    <article class="card"><h2>About this app</h2><p class="hint">Rooms are invite-only and reachable only with their code. There is no public matchmaking and no analytics. Turn Tactics needs a connection: an installed copy opens offline but cannot show live state or send actions. <span id="appVersion"></span></p></article>
   </div>
 </section>
 
 <!-- HOST DESK -->
 <section id="view-desk" class="view" hidden>
-  <div class="page-title"><h1>Host desk</h1><p class="hint">You referee; you do not play. Your resource view and action log are private to this role. You cannot read other people’s direct messages or mute anyone.</p></div>
+  <div class="page-title"><h1>Host desk</h1><p class="hint">You referee the game and do not play it. Your resource view and action log are private to this role. You cannot read other people’s direct messages or mute anyone.</p></div>
   <p id="deskFeedback" class="feedback" role="status" aria-live="polite"></p>
   <div class="columns">
     <article class="card" id="roomControls"><h2>Room</h2><p id="deskStatus"></p>
@@ -342,7 +342,7 @@
       <div class="button-row"><button id="previewAmend" class="primary" type="button">Preview</button><button id="clearAmend" type="button">Start over</button></div>
       <div id="amendPreview" class="preview" hidden aria-live="polite"></div>
       <button id="publishAmend" class="primary" type="button" hidden></button>
-      <details><summary>What the rules desk will not do</summary><p class="hint">It never backdates income, replays past events, revives players, moves pieces or resizes an occupied board. It cannot open anyone’s messages, change sign-in or recovery protections, mute players, remove chat from eliminated players, reveal private resources, or run code. Published amendments are permanent public history: a correction is a new amendment, not an erasure.</p></details>
+      <details><summary>What the rules desk will not do</summary><p class="hint">It never backdates income, replays past events, revives players, moves pieces or resizes an occupied board. It cannot open anyone’s messages, change sign-in or recovery protections, mute players, remove chat from eliminated players, reveal private resources, or run code. Published amendments are permanent public history, so a correction goes in as a new amendment.</p></details>
     </article>
 
     <article class="card"><h2>Proposals to review</h2><div id="reviewList"></div></article>

@@ -191,7 +191,7 @@ export function createChat({ getRoom, rpc, avatar }) {
       if (c !== ctx) return;
       // A definite server answer clears the pending message; silence (network loss) keeps it for a safe retry.
       if (e?.code && !String(e.code).startsWith('5')) { savePending(c, null); feedback(errorText(e)); if (/expired/i.test(e.message || '')) fail(c, e); }
-      else feedback('Delivery is unconfirmed. Retry the same message — it will not be sent twice.');
+      else feedback('Delivery is unconfirmed. Retry the same message; it will not be sent twice.');
     } finally { c.sending = false; if (c === ctx) controls(); }
   }
 
